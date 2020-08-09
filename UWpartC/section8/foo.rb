@@ -207,3 +207,91 @@ end
 # def mirrof_update pt
 #     pt.x = pt.x * (-1)
 # end
+
+# Arrays
+
+# a = [1,2,3]
+
+# Blocks
+
+# [1,2,3].each { |x| puts x}
+# [1,2,3].map { |x| x+1 } or _.collect
+# foldl analogy : a = [1,2,3]; a.inject(0) { |acc,elt| acc+elt }
+# foldl1 a.inject { |acc,elt| acc+elt }
+# filter analogy : a.select { |x| x>1 && x<2 }
+
+# funny triangle
+def t i
+  (0..i).each do |j|
+    print "  " * j
+    (j..i).each { |k| print k; print " " }
+    print "\n"
+  end
+end
+
+# using block
+class Foo_block
+  def initialize(max)
+    @max = max
+  end
+
+  def silly
+    yield(4,5) + yield(@max,@max)
+  end
+
+  def count base
+    if base > @max
+      raise "reached max"
+    elsif yield base
+      1
+    else
+      1 + (count(base+1) { |i| yield i })
+    end
+  end
+end
+
+## Procs
+# alist = [3,5,7,9]
+# bproc = alist.map { |x| lambda { |y| x>=y }}
+# bproc[0].call 3 => true
+
+## Hashes
+# h1 = Hash.new() or {}
+# h1["a"] = "Found A"
+# h1[false] = "Found false"
+# h1.keys h2.values
+# h1.each { |k,v| print k; print ": "; puts v }
+
+## Ranges
+# 1.100 - crate a range
+# (1..100).inject { |acc,elt| acc + elt }
+
+## Subclassing
+
+class Point
+  attr_accessor :x, :y # defines methods x, y, x=, y=
+
+  def initialize(x,y)
+    @x = x
+    @y - y
+  end
+
+  def distFromOrigin
+    Math.sqrt(@x * @x + @y * @y) # uses instance variables
+  end
+
+  def distFromOrigin2
+    Math.sqrt(x * x + y * y) # uses getter methods
+  end
+
+end
+
+class ColorPoint < Point
+  attr_accessor :color # color and color=
+
+  def initialize(x,y,c="clear")
+    super(x,y) # calls same method in superclass
+    @color = c
+  end
+
+end
