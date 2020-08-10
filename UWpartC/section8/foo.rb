@@ -295,3 +295,103 @@ class ColorPoint < Point
   end
 
 end
+
+## Overriding and Dynamic Dispatch
+class TreeDPoint < Point
+  attr_accessor :z
+
+  def initialize(x,y,z)
+    super(x,y)
+    @z = z
+  end
+
+  def distFromOrigin
+    d = super
+    Math.sqrt(d * d + @z * @z)
+  end
+
+  def distFromOrigin2
+    d = super
+    Math.sqrt(d * d + z * z)
+  end
+
+end
+
+class PolarPoint < Point
+
+  def initialize(r,theta)
+    @r = r
+    @theta = theta
+  end
+
+  def x
+    @r * Math.cos(@theta)
+  end
+
+  def y
+    @r * Math.sin(@theta)
+  end
+
+  def x= a
+    b = y # avoids multiple calls to y method
+    @theta = Math.atan2(b, a)
+    @r = Math.sqrt(a*a + b*b)
+    self
+  end
+
+  def y= b
+    a = x # avoid multiple calls to y method
+    @theta = Math.atan2(b, a)
+    @r = Math.sqrt(a*a + b*b)
+    self
+  end
+
+  def distFromOrigin # must override since inherited method does wrong thing
+    @r
+  end
+  # inherited distFromOrigin2 already works!!
+
+end
+
+## Another example
+
+class DyDiA
+
+  def even x
+    puts "in even A "
+    if x== 0 then true else odd(x-1) end # #self.odd(x-1)
+  end
+
+  def odd x
+    puts "in odd A "
+    if x==0 then false else even(x-1) end
+  end
+
+end
+
+# a1 = DyDiA.new.odd 7
+# puts "a1 is " + a1.to_s + "\n\n"
+
+class DyDiB < DyDiA
+
+  def even x # changes B's odd too!
+    puts "in even B "
+    x % 2 == 0
+  end
+
+end
+
+class DyDiC < DyDiA
+
+  def even x # changes C's odd too!
+    puts "in even C"
+    false
+  end
+
+end
+
+# a2 = DyDiB.new.odd 7
+# puts "a2 is " + a2.to_s + "\n\n"
+
+# a3 = DyDiC.new.odd 7
+# puts "a3 is " + a3.to_s + "\n\n"
