@@ -399,11 +399,11 @@ class Tetris
     blocks = piece.current_rotation
     start = piece.position
     blocks.map{|block|
-    TetrisRect.new(@canvas, start[0]*size + block[0]*size + 3,
-                       start[1]*size + block[1]*size,
-                       start[0]*size + size + block[0]*size + 3,
-                       start[1]*size + size + block[1]*size,
-                       piece.color)}
+      TetrisRect.new(@canvas, start[0]*size + block[0]*size + 3,
+                     start[1]*size + block[1]*size,
+                     start[0]*size + size + block[0]*size + 3,
+                     start[1]*size + size + block[1]*size,
+                     piece.color)}
   end
 end
 
