@@ -186,9 +186,7 @@ fun preprocess_prog (e) =
     case e of
         LineSegment (x1,y1,x2,y2) =>
         if real_close_point (x1,y1) (x2,y2) then Point (x1,y1)
-        else if real_close (x1,x2) then if y1 < y2
-                                        then e
-                                        else LineSegment (x1,x1,y2,y1)
+        else if real_close (x1,x2) andalso y1 < y2 then e
         else LineSegment (x2,y2,x1,y1)
       | Shift (dx,dy,e) =>
         (case e of
@@ -196,7 +194,7 @@ fun preprocess_prog (e) =
           | Point (x,y) => Point (x+dx,y+dy)
           | Line (m,b) => Line (m, b + dy - m * dx)
           | VerticalLine x => VerticalLine (x + dx)
-          | LineSegment (x1,y1,x2,y2) => LineSegment (x1+dx,y1+dx,x2+dx,y2+dx)
+          | LineSegment (x1,y1,x2,y2) => LineSegment (x1+dx,y1+dy,x2+dx,y2+dy)
           | _ => e)
       | _ => e;
 
