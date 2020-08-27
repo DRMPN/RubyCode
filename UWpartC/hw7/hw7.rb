@@ -133,7 +133,39 @@ class Point < GeometryValue
     Point.new(x+dx,y+dy)
   end
 
-  #TODO def intersect end
+  def intersect other
+    other.intersectPoint self
+  end
+
+  def intersectNoPoints np      ## other is NoPoint
+    NoPoints.new
+  end
+
+  def intersectPoint pt         ## other is Point
+    if real_close_point(pt.x, pt.y, x, y )
+      self
+    else NoPoints.new
+    end
+  end
+
+  def intersectLine l           ## other is Line
+    if real_close(y, l.m * x + l.b)
+      self
+    else NoPoints.new
+    end
+  end
+
+  def intersectVerticalLine vl  ## other is VerticalLine
+    if real_close(x,vl.x)
+      self
+    else NoPoints.new
+    end
+  end
+
+  # TODO check this
+  def intersectLineSegment ls   ## other is LineSegment
+    ls.intersect self
+  end
 
 end
 
@@ -223,6 +255,8 @@ end
 
 # Note: there is no need for getter methods for the non-value classes
 
+# geom_exp -> geom_exp -> geom_exp
+
 class Intersect < GeometryExpression
   # *add* methods to this class -- do *not* change given code and do not
   # override any methods
@@ -230,6 +264,16 @@ class Intersect < GeometryExpression
     @e1 = e1
     @e2 = e2
   end
+
+  # TODO check preprocess correctness
+  def preprocess_prog
+    Intersect.new(@e1.preprocess_prog, @e2.preprocess_prog)
+  end
+
+  def eval_prog env
+    Intersect.new(@e1.eval_prog(env), @e2.eval_prog(env))
+  end
+
 end
 
 class Let < GeometryExpression
