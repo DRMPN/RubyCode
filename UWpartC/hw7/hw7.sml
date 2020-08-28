@@ -186,16 +186,12 @@ fun preprocess_prog (e) =
     case e of
         LineSegment (x1,y1,x2,y2) =>
         if real_close_point (x1,y1) (x2,y2) then Point (x1,y1)
-        else if real_close (x1,x2) andalso y1 < y2 then e
+        else if (real_close (x1,x2) andalso y1 < y2) orelse (x1 < x2 andalso y1 < y2)
+        then e
         else LineSegment (x2,y2,x1,y1)
-      | Shift (dx,dy,e) =>
-        (case e of
-            NoPoints => NoPoints
-          | Point (x,y) => Point (x+dx,y+dy)
-          | Line (m,b) => Line (m, b + dy - m * dx)
-          | VerticalLine x => VerticalLine (x + dx)
-          | LineSegment (x1,y1,x2,y2) => LineSegment (x1+dx,y1+dy,x2+dx,y2+dy)
-          | _ => e)
+      | Shift (dx,dy,e) => Shift (dx,dy,preprocess_prog(e))
+      | Intersect (v1,v2) => Intersect (preprocess_prog(v1),preprocess_prog(v2))
+      | Let (s,e1,e2) => Let (s,preprocess_prog(e1),preprocess_prog(e2))
       | _ => e;
 
 fun eval_prog (e,env) =
@@ -211,5 +207,11 @@ fun eval_prog (e,env) =
      | SOME (_,v) => v)
       | Let(s,e1,e2) => eval_prog (e2, ((s, eval_prog(e1,env)) :: env))
       | Intersect(e1,e2) => intersect (eval_prog(e1,env), eval_prog(e2, env))
-      | Shift (dx,dy,e) => preprocess_prog (Shift (dx,dy,eval_prog (e, env)))
-
+      | Shift (dx,dy,e) =>
+        (case eval_prog(e,env) of
+            NoPoints => NoPoints
+          | Point (x,y) => Point (x+dx,y+dy)
+          | Line (m,b) => Line (m, b + dy - m * dx)
+          | VerticalLine x => VerticalLine (x + dx)
+          | LineSegment (x1,y1,x2,y2) => LineSegment (x1+dx,y1+dy,x2+dx,y2+dy)
+          | _ => e)
