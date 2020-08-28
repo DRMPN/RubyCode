@@ -162,9 +162,8 @@ class Point < GeometryValue
     end
   end
 
-  # TODO check this
   def intersectLineSegment ls   ## other is LineSegment
-    ls.intersect self
+    self.intersect ls
   end
 
 end
@@ -190,7 +189,38 @@ class Line < GeometryValue
     Line.new( m, b + dy - m * dx )
   end
 
-  # TODO intersect
+  def intersect other
+    other.intersectLine self
+  end
+
+  def intersectNoPoints np      ## other is NoPoint
+    NoPoints.new
+  end
+
+  def intersectPoint pt         ## other is Point
+    self.intersect pt
+  end
+
+  def intersectLine l           ## other is Line
+    if real_close(m, l.m)
+      (if real_close(b, l.b)
+       self
+      else NoPoints.new
+       end)
+    else
+      x = (b - l.b) / (l.m - m)
+      y = l.m * x + l.b
+      Point.new(x,y)
+    end
+  end
+
+  def intersectVerticalLine vl  ## other is VerticalLine
+    Point.new(vl.x, m * vl.x + b)
+  end
+
+  def intersectLineSegment ls   ## other is LineSegment
+    self.intersect ls
+  end
 
 end
 
@@ -214,7 +244,32 @@ class VerticalLine < GeometryValue
     VerticalLine.new( x + dx )
   end
 
-  # TODO intersect
+  def intersect other
+    other.intersectVerticalLine self
+  end
+
+  def intersectNoPoints np      ## other is NoPoint
+    NoPoints.new
+  end
+
+  def intersectPoint pt         ## other is Point
+    self.intersect pt
+  end
+
+  def intersectLine l           ## other is Line
+    self.intersect l
+  end
+
+  def intersectVerticalLine vl  ## other is VerticalLine
+    if real_close(vl.x,x)
+      self
+    else NoPoints.new
+    end
+  end
+
+  def intersectLineSegment ls   ## other is LineSegment
+    self.intersect ls
+  end
 
 end
 
@@ -249,13 +304,24 @@ class LineSegment < GeometryValue
     LineSegment.new( x1+dx, y1+dy, x2+dx, y2+dy ).preprocess_prog
   end
 
-  # TODO intersect
+  # TODO implement intersect
+  def intersect other
+    other.intersectLineSegment self
+  end
+
+  # TODO Check this
+  def intersectLineSegment ls
+    self.intersectWithSegmentAsLineResult ls
+  end
+
+  # TODO implement this method to every GeometryValue subclass
+  def intersectWithSegmentAsLineResult something
+    self
+  end
 
 end
 
 # Note: there is no need for getter methods for the non-value classes
-
-# geom_exp -> geom_exp -> geom_exp
 
 class Intersect < GeometryExpression
   # *add* methods to this class -- do *not* change given code and do not
@@ -265,13 +331,12 @@ class Intersect < GeometryExpression
     @e2 = e2
   end
 
-  # TODO check preprocess correctness
   def preprocess_prog
     Intersect.new(@e1.preprocess_prog, @e2.preprocess_prog)
   end
 
   def eval_prog env
-    Intersect.new(@e1.eval_prog(env), @e2.eval_prog(env))
+    (@e1.eval_prog(env)).intersect(@e2.eval_prog(env))
   end
 
 end
@@ -287,15 +352,15 @@ class Let < GeometryExpression
   end
 
   def preprocess_prog
+    Let.new(@s,@e1.preprocess_prog,@e2.preprocess_prog)
+  end
+
+  def shift(dx,dy)
     self
   end
 
-  # TODO change this
   def eval_prog env
-    e1_evaluated = @e1.eval_prog(env)
-    tuple = [@s,e1_evaluated]
-    new_env = [tuple] + env
-    @e2.eval_prog(new_env)
+    @e2.eval_prog([[@s, @e1.eval_prog(env)]] + env)
   end
 
 end
@@ -308,6 +373,10 @@ class Var < GeometryExpression
   end
 
   def preprocess_prog
+    self
+  end
+
+  def shift(dx,dy)
     self
   end
 
@@ -332,8 +401,12 @@ class Shift < GeometryExpression
     Shift.new(@dx,@dy,@e.preprocess_prog)
   end
 
+  def shift(dx,dy)
+    self
+  end
+
   def eval_prog env
-    @e.shift(@dx,@dy)
+    (@e.eval_prog(env)).shift(@dx,@dy)
   end
 
 end
